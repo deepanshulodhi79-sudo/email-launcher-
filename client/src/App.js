@@ -1,56 +1,34 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import Login from './Login';
+import MailLauncher from './MailLauncher';
 
 function App() {
-  const [form, setForm] = useState({
-    username: '',
-    password: '',
-    senderName: '',
-    senderEmail: '',
-    appPassword: '',
-    subject: '',
-    body: '',
-    recipients: ''
-  });
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState('');
+  const [token, setToken] = useState(localStorage.getItem('authToken'));
 
-  const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem('authToken', token);
+    } else {
+      localStorage.removeItem('authToken');
+    }
+  }, [token]);
 
-  const sendEmails = async () => {
-    setSending(true);
-    const res = await fetch('https://your-backend-url.com/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    const data = await res.json();
-    setMessage(data.message);
-    setSending(false);
+  const handleLogout = () => {
+    setToken(null);
   };
 
   return (
-    <div className="container">
-      <h2>Email Launcher</h2>
-      <input name="username" placeholder="Login Username" onChange={handleChange} />
-      <input name="password" type="password" placeholder="Login Password" onChange={handleChange} />
-      <input name="senderName" placeholder="Sender Name" onChange={handleChange} />
-      <input name="senderEmail" placeholder="Sender Email" onChange={handleChange} />
-      <input name="appPassword" type="password" placeholder="App Password" onChange={handleChange} />
-      <input name="subject" placeholder="Subject" onChange={handleChange} />
-      <textarea name="body" placeholder="Email Body" onChange={handleChange} />
-      <textarea name="recipients" placeholder="Recipient Emails (comma separated)" onChange={handleChange} />
-
-      <button
-        onClick={sendEmails}
-        style={{ backgroundColor: sending ? 'gray' : '#007bff' }}
-      >
-        {sending ? 'Sending...' : 'Send Emails'}
-      </button>
-
-      {message && <div className="popup">{message}</div>}
+    <div>
+      {!token ? (
+        <Login setToken={setToken} />
+      ) : (
+        <>
+          <MailLauncher token={token} />
+          <button onClick={handleLogout} style={{ marginTop: '20px' }}>
+            Logout
+          </button>
+        </>
+      )}
     </div>
   );
 }
